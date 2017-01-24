@@ -138,7 +138,7 @@
 
 </script>
 
-<style scoped>
+<style>
   @import url('../node_modules/dropzone/dist/dropzone.css');
 
   .dropzone{

@@ -36,7 +36,7 @@
   }
 </script>
 
-<style scoped>
+<style>
   @import url('../node_modules/dropzone/dist/dropzone.css');
   @import 'https://fonts.googleapis.com/css?family=Roboto';
 </style>
