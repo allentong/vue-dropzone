@@ -192,11 +192,7 @@
 
 </script>
 
-<<<<<<< HEAD
 <style lang="less">
-=======
-<style>
->>>>>>> fix(derp): remove scoped css to allow style modifications
   @import url('../node_modules/dropzone/dist/dropzone.css');
 
   .vue-dropzone{
@@ -285,5 +281,4 @@
       }
     }
   }
-
 </style>
