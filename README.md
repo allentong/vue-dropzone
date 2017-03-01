@@ -5,7 +5,7 @@ A Vue component for file uploads, powered by [Dropzone.js](http://www.dropzonejs
 ## Install
 ````
 // For Vue.js 2.0+
-npm install vue2-dropzone^2.0.0
+npm install vue2-dropzone@^2.0.0
 ````
 You'll also need to load either the [Material Icon](https://material.io/icons/) or [FontAwesome](http://fontawesome.io/) icon kits depending on which style of icon you'd like.
 ````
@@ -63,7 +63,9 @@ Many of these props are inherited from [dropzone configuration so see their doco
 | maxNumberOfFiles | Number | The maximum number of files to allow the user to upload.|
 | autoProcessQueue | Boolean | Whether the files are automatically uploaded or not.|
 | useFontAwesome | Boolean | Whether to use Font Awesome instead of Material Icon.|
-| useCustomDropzoneOptions | Boolean | If you want to define your own Dropzone config set this to true and define a dropzoneOptions.|
+| headers | Object | If you want to add additional headers.|
+| language | Object | Use dropzone's [dict properties](http://www.dropzonejs.com/#config-dictDefaultMessage) to change texts. |
+| useCustomDropzoneOptions | Boolean | If you want to define your own dropzone config set this to true and define a dropzoneOptions.|
 | dropzoneOptions | Object | A custom set of rules to define your dropzone object, use anything available in the [dropzone config](http://www.dropzonejs.com/#configuration-options).|
 
 ## Methods
@@ -71,8 +73,11 @@ Methods you can call on the component.
 
 | Method | Description |
 |------------|-------------|
+| setOption(optionname, value) | Sets the value of one of the dropzone options after initialisation. Handy if you need to pass through a token after the component has initialised. |
 | removeAllFiles() | Empties the dropzone area.|
 | processQueue() | Uploads the files, required if autoProcessQueue is set to false.|
+| removeFile(file) | Removes a file from the dropzone area.|
+
 
 ##Using Methods
 Methods can be called from your parent component by making use of the <a href="https://vuejs.org/v2/api/#ref">special tag "ref"</a>.
@@ -94,11 +99,13 @@ Events emitted by the component to the parent.
 
 | Event Name | Description |
 |------------|-------------|
-| vdropzone-fileAdded(file) | File added to the dropzone.|
+| vdropzone-file-added(file) | File added to the dropzone.|
 | vdropzone-success(file, response) | File successfully uploaded.|
 | vdropzone-error(file) | File uploaded encountered an error.|
-| vdropzone-removedFile(file, error, xhr) | A file was removed from the dropzone.|
+| vdropzone-removed-file(file, error, xhr) | A file was removed from the dropzone.|
 | vdropzone-sending(file, xhr, formData) | Modify the request and add addtional parameters to request before sending.|
+| vdropzone-success-multiple(files, response) | Fired if the uploadMultiple option is true.|
+| vdropzone-sending-multiple(files, xhr, formData) | Fired if the uploadMultiple option is true.|
 
 
 ## Development

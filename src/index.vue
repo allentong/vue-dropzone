@@ -1,12 +1,10 @@
 <template>
 
-  <form :action="url" class="dropzone" :id="id"></form>
+  <form :action="url" class="vue-dropzone dropzone" :id="id"></form>
 
 </template>
 
 <script>
-  var Dropzone = require('dropzone')
-  Dropzone.autoDiscover = false
 
   export default {
     props: {
@@ -51,8 +49,29 @@
       },
       useFontAwesome: {
         type: Boolean,
-        default: false      
+        default: false
       },
+      headers: {
+        type: Object
+      },
+			language: {
+				type: Object,
+				default: function() {
+					return {
+						dictDefaultMessage: '<br>Drop files here to upload',
+						dictCancelUpload: 'Cancel upload',
+						dictCancelUploadConfirmation: 'Are you sure you want to cancel this upload?',
+						dictFallbackMessage: 'Your browser does not support drag and drop file uploads.',
+						dictFallbackText: 'Please use the fallback form below to upload your files like in the olden days.',
+						dictFileTooBig: 'File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.',
+						dictInvalidFileType: `You can't upload files of this type.`,
+						dictMaxFilesExceeded: 'You can not upload any more files. (max: {{maxFiles}})',
+						dictRemoveFile: 'Remove',
+						dictRemoveFileConfirmation: null,
+						dictResponseError: 'Server responded with {{statusCode}} code.',
+					}
+				}
+			},
       useCustomDropzoneOptions: {
         type: Boolean,
         default: false
@@ -62,11 +81,17 @@
       }
     },
     methods: {
+      setOption: function (option, value) {
+        this.dropzone.options[option] = value
+      },
       removeAllFiles: function () {
         this.dropzone.removeAllFiles(true)
       },
       processQueue: function () {
         this.dropzone.processQueue()
+      },
+      removeFile: function (file) {
+        this.dropzone.removeFile(file)
       }
     },
     computed: {
@@ -93,6 +118,11 @@
       }
     },
     mounted () {
+      if (this.$isServer) {
+        return
+      }
+      var Dropzone = require('dropzone')
+      Dropzone.autoDiscover = false
       var element = document.getElementById(this.id)
       if (!this.useCustomDropzoneOptions) {
         this.dropzone = new Dropzone(element, {
@@ -101,29 +131,45 @@
           thumbnailHeight: this.thumbnailHeight,
           maxFiles: this.maxNumberOfFiles,
           maxFilesize: this.maxFileSizeInMB,
-          dictRemoveFile: 'Remove',
           addRemoveLinks: this.showRemoveLink,
           acceptedFiles: this.acceptedFileTypes,
           autoProcessQueue: this.autoProcessQueue,
-          dictDefaultMessage: this.cloudIcon +'<br>Drop files here to upload',
-          previewTemplate: '<div class="dz-preview dz-file-preview">  <div class="dz-image" style="width:' + this.thumbnailWidth + 'px;height:' + this.thumbnailHeight + 'px"><img data-dz-thumbnail /></div>  <div class="dz-details">    <div class="dz-size"><span data-dz-size></span></div>    <div class="dz-filename"><span data-dz-name></span></div>  </div>  <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>  <div class="dz-error-message"><span data-dz-errormessage></span></div>  <div class="dz-success-mark">' + this.doneIcon + ' </div>  <div class="dz-error-mark' + this.errorIcon + '</div></div>'
+          headers: this.headers,
+          previewTemplate: '<div class="dz-preview dz-file-preview">  <div class="dz-image" style="width:' + this.thumbnailWidth + 'px;height:' + this.thumbnailHeight + 'px"><img data-dz-thumbnail /></div>  <div class="dz-details">    <div class="dz-size"><span data-dz-size></span></div>    <div class="dz-filename"><span data-dz-name></span></div>  </div>  <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>  <div class="dz-error-message"><span data-dz-errormessage></span></div>  <div class="dz-success-mark">' + this.doneIcon + ' </div>  <div class="dz-error-mark">' + this.errorIcon + '</div></div>',
+					dictDefaultMessage: this.cloudIcon + this.language.dictDefaultMessage,
+    			dictCancelUpload: this.language.dictCancelUpload,
+    			dictCancelUploadConfirmation: this.language.dictCancelUploadConfirmation,
+    			dictFallbackMessage: this.language.dictFallbackMessage,
+    			dictFallbackText: this.language.dictFallbackText,
+    			dictFileTooBig: this.language.dictFileTooBig,
+    			dictInvalidFileType: this.language.dictInvalidFileType,
+    			dictMaxFilesExceeded: this.language.dictMaxFilesExceeded,
+    			dictRemoveFile: this.language.dictRemoveFile,
+    			dictRemoveFileConfirmation: this.language.dictRemoveFileConfirmation,
+    			dictResponseError: this.language.dictResponseError
         })
       } else {
         this.dropzone = new Dropzone(element, this.dropzoneOptions)
       }
-
       // Handle the dropzone events
       var vm = this
+      this.dropzone.on('thumbnail', function (file) {
+        vm.$emit('vdropzone-thumbnail', file)
+      })
       this.dropzone.on('addedfile', function (file) {
-        vm.$emit('vdropzone-fileAdded', file)
+        vm.$emit('vdropzone-file-added', file)
       })
 
       this.dropzone.on('removedfile', function (file) {
-        vm.$emit('vdropzone-removedFile', file)
+        vm.$emit('vdropzone-removed-file', file)
       })
 
       this.dropzone.on('success', function (file, response) {
         vm.$emit('vdropzone-success', file, response)
+      })
+
+      this.dropzone.on('successmultiple', function (file, response) {
+        vm.$emit('vdropzone-success-multiple', file, response)
       })
 
       this.dropzone.on('error', function (file, error, xhr) {
@@ -133,87 +179,106 @@
       this.dropzone.on('sending', function(file, xhr, formData){
         vm.$emit('vdropzone-sending', file, xhr, formData)
       })
+
+      this.dropzone.on('sendingmultiple', function(file, xhr, formData){
+        vm.$emit('vdropzone-sending-multiple', file, xhr, formData)
+      })
+
+      this.dropzone.on('queuecomplete', function(file, xhr, formData){
+        vm.$emit('vdropzone-queue-complete', file, xhr, formData)
+      })
     }
   }
 
 </script>
 
-<style>
+<style lang="less">
   @import url('../node_modules/dropzone/dist/dropzone.css');
 
-  .dropzone{
+  .vue-dropzone{
     border: 2px solid #E5E5E5;
     font-family: 'Arial', sans-serif;
     letter-spacing: 0.2px;
     color: #777;
     transition: background-color .2s linear;
-  }
 
-  .dropzone:hover{
-    background-color: #F6F6F6;
-  }
+    &:hover {
+      background-color: #F6F6F6;
+    }
 
-  .dropzone i{
-    color: #CCC;
-  }
+    i {
+      color: #CCC;
+    }
 
-  .dropzone .dz-preview .dz-image {
-    border-radius: 0px;
-  }
+    .dz-preview {
 
-  .dropzone .dz-preview:hover .dz-image img{
-    transform: none;
-    -webkit-filter: none;
-  }
+      .dz-image {
+        border-radius: 0px;
+        &:hover {
+          img {
+            transform: none;
+            -webkit-filter: none;
+          }
+        }
+      }
 
-  .dropzone .dz-preview .dz-details{
-    bottom: 0px;
-    top: 0px;
-    color: white;
-    background-color: rgba(33, 150, 243, 0.8);
-    transition: opacity .2s linear;
-    text-align: left;
-  }
-  .dropzone .dz-preview .dz-details .dz-filename span, .dropzone .dz-preview .dz-details .dz-size span {
-    background-color: transparent;
-  }
-  .dropzone .dz-preview .dz-details .dz-filename:not(:hover) span{
-    border: none;
-  }
+      .dz-details {
+        bottom: 0px;
+        top: 0px;
+        color: white;
+        background-color: rgba(33, 150, 243, 0.8);
+        transition: opacity .2s linear;
+        text-align: left;
+        .dz-filename span, .dz-size span {
+          background-color: transparent;
+        }
+        .dz-filename:not(:hover) span {
+          border: none;
+        }
+        .dz-filename:hover span {
+          background-color: transparent;
+          border: none;
+        }
+      }
 
-  .dropzone .dz-preview .dz-details .dz-filename:hover span{
-    background-color: transparent;
-    border: none;
-  }
+      .dz-progress .dz-upload {
+        background: #cccccc;
+      }
 
-  .dropzone .dz-preview .dz-remove{
-    position: absolute;
-    z-index: 30;
-    color: white;
-    margin-left: 15px;
-    padding: 10px;
-    top: inherit;
-    bottom: 15px;
-    border: 2px white solid;
-    text-decoration: none;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    font-weight: 800;
-    letter-spacing: 1.1px;
-    opacity: 0;
-  }
+      .dz-remove {
+        position: absolute;
+        z-index: 30;
+        color: white;
+        margin-left: 15px;
+        padding: 10px;
+        top: inherit;
+        bottom: 15px;
+        border: 2px white solid;
+        text-decoration: none;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 1.1px;
+        opacity: 0;
+      }
 
-  .dropzone .dz-preview:hover .dz-remove {
-    opacity: 1;
-  }
+      &:hover {
+        .dz-remove {
+          opacity: 1;
+        }
+      }
 
-  .dropzone .dz-preview .dz-success-mark, .dropzone .dz-preview .dz-error-mark {
-    margin-left: -40px;
-    margin-top: -50px;
-  }
-
-  .dropzone .dz-preview .dz-success-mark i, .dropzone .dz-preview .dz-error-mark i {
-    color: white;
-    font-size: 5rem;
+      .dz-success-mark, .dz-error-mark {
+        margin-left: auto!important;
+        margin-top: auto!important;
+        width: 100%!important;
+        top: 35%!important;
+        left: 0;
+        i {
+          color: white!important;
+          font-size: 5rem!important;
+        }
+      }
+    }
   }
 </style>

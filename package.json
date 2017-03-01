@@ -2,12 +2,13 @@
   "name": "vue2-dropzone",
   "description": "A wrapper around Dropzone.js for Vue 2",
   "author": "rowanwins <rowanwins@yahoo.com.au>",
-  "version": "2.1.2",
+  "version": "2.2.2",
   "main": "./dist/vue2-dropzone.js",
   "scripts": {
     "dev": "webpack-dev-server --inline --hot --config ./build/dev.js --port 8080",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules --config ./build/prod.js && npm run build:demo",
-    "build:demo": "cross-env NODE_ENV=production webpack --progress --hide-modules --config ./build/dev.js"
+    "build:demo": "cross-env NODE_ENV=production webpack --progress --hide-modules --config ./build/dev.js",
+    "prepublish": "npm run build"
   },
   "dependencies": {
     "dropzone": "^4.3.0",
@@ -24,6 +25,8 @@
     "css-loader": "^0.23.0",
     "file-loader": "^0.8.4",
     "json-loader": "^0.5.4",
+    "less": "^2.7.2",
+    "less-loader": "^2.2.3",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
     "vue-hot-reload-api": "^2.0.6",
